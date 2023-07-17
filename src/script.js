@@ -4,7 +4,7 @@ import * as dat from 'lil-gui'
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader';
 const canvas = document.querySelector('canvas.webgl');
 const textureLoader = new THREE.TextureLoader()
-
+const rayCaster = new THREE.Raycaster();
 function addMorphedTarget(scene){
     scene.traverse((child)=>{
         if(child.isMesh){
@@ -21,12 +21,20 @@ var SCENE_CONFIG = {
     materials : {},
     textures : {},
     sounds : [],
-    portal: null,
+    objectsToTestRaycaster : [],
     animationMixer : null,
     objectsToUpdate:[],
     animationAction : null,
     contactMaterials: {},
+    mouse : new THREE.Vector2(),
     camera: null,
+    pokeball:{
+        isButtonHovered: false,
+        hoverColor : new THREE.Color("#f54242"),
+        scene : null,
+        gameboyPlane : null,
+        isOpen : false
+    },
     sizes : {
         width: window.innerWidth,
         height : window.innerHeight
@@ -40,18 +48,28 @@ var SCENE_CONFIG = {
 
 const gltfLoader = new GLTFLoader(); 
 const gui = new dat.GUI()
+gui.addColor(SCENE_CONFIG.pokeball,'hoverColor').onChange(color=>{
+    SCENE_CONFIG.pokeball.hoverColor.set(color)
+})
+
+
 const loadedOjects = Promise.all([
     gltfLoader.load("/objects/Pokeball/pokeball.gltf",(gltf)=>{
         console.log(gltf)
         SCENE_CONFIG.scene.add(gltf.scene)
         addMorphedTarget(gltf.scene)
+        SCENE_CONFIG.pokeball.gameboyPlane = gltf.scene.children[0]
+        SCENE_CONFIG.pokeball.gameboyPlane.visible = false
+        SCENE_CONFIG.pokeball.scene = gltf.scene.children[1]
+        SCENE_CONFIG.objectsToTestRaycaster.push(SCENE_CONFIG.pokeball.scene.children[0])
         console.log(gltf.scene)
+        gltf.scene.rotation.y = 2.70
+        gui.add(gltf.scene.rotation,'y',0,Math.PI * 2).name('PokeballRotation')
         SCENE_CONFIG.animationMixer = new THREE.AnimationMixer(gltf.scene)
         SCENE_CONFIG.animationAction = SCENE_CONFIG.animationMixer.clipAction(gltf.animations[0])
         SCENE_CONFIG.animationAction.clampWhenFinished = true
         SCENE_CONFIG.animationAction.repetitions = 0
 
-        SCENE_CONFIG.animationAction.play()
     }),
     textureLoader.load('/env/pokelab.jpg')
 ],(resolve,reject)=> {
@@ -146,6 +164,16 @@ window.addEventListener('dblclick', () =>
     }
 })
 
+window.addEventListener('mousedown',(e)=>{
+    if(SCENE_CONFIG.pokeball.isButtonHovered && !SCENE_CONFIG.pokeball.isOpen){
+        SCENE_CONFIG.animationAction.play()
+        SCENE_CONFIG.pokeball.gameboyPlane.visible = true
+    }
+})
+window.addEventListener('mousemove',(e)=>{
+     SCENE_CONFIG.mouse.x = e.clientX/SCENE_CONFIG.sizes.width * 2 - 1
+     SCENE_CONFIG.mouse.y = - (e.clientY/SCENE_CONFIG.sizes.height) * 2 + 1
+})
 // RESIZE
 window.addEventListener('resize', () =>
 {
@@ -173,7 +201,6 @@ let oldElapsedTime = 0
 const tick = () => {
     if(SCENE_CONFIG.canvas != null){
         const elapsedTime = clock.getElapsedTime();
-
         const deltaTime = elapsedTime - SCENE_CONFIG.oldElapsedTime
         SCENE_CONFIG.oldElapsedTime = elapsedTime
     
@@ -189,6 +216,30 @@ const tick = () => {
         {
         SCENE_CONFIG.renderer.render(SCENE_CONFIG.scene,SCENE_CONFIG.camera);
         }
+        if(rayCaster != null && SCENE_CONFIG.objectsToTestRaycaster.length > 0){
+            rayCaster.setFromCamera(SCENE_CONFIG.mouse,SCENE_CONFIG.camera)
+            const intersects = rayCaster.intersectObjects(SCENE_CONFIG.objectsToTestRaycaster)
+            
+            for(const intersect of intersects)
+            {
+                intersect.object.material.color.set(SCENE_CONFIG.pokeball.hoverColor)
+                SCENE_CONFIG.pokeball.isButtonHovered = true
+                document.getElementsByTagName('body')[0].style.cursor = "pointer"
+            }
+
+            for(const object of SCENE_CONFIG.objectsToTestRaycaster)
+            {
+                if(!intersects.find(intersect => intersect.object === object))
+                {
+                    object.material.color.set('#ffffff')
+                    SCENE_CONFIG.pokeball.isButtonHovered = false
+                    document.getElementsByTagName('body')[0].style.cursor = "auto"
+
+
+                }
+            }
+        }
+
         window.requestAnimationFrame(tick);
     }
    
@@ -197,31 +248,3 @@ tick();
 
 
 
-
-function displayGUIProps(gui,...args)
-{
-    // let portalFolder=gui.addFolder("Portal")
-    gui.add(globalConfig,'playGrassSound')
-    // portalFolder.add(portal.mesh.position,'x').min(0).max(5).step(0.1)
-    // portalFolder.add(portal.mesh.position,'y').min(0).max(5).step(0.1)
-    // portalFolder.add(portal.mesh.position,'z').min(0).max(5).step(0.1)
-    // portalFolder.add(portal.parameters,'size').min(0.001).max(0.5).step(0.001).onChange(() => portal.generateMagicParticle(scene))
-    // portalFolder.add(portal.parameters,'count').min(100).max(100000).step(20).onChange(() => portal.generateMagicParticle(scene))
-    // portalFolder.add(portal.parameters,'branches').min(1).max(10).step(1).onChange(() => portal.generateMagicParticle(scene))
-    // portalFolder.add(portal.parameters,'radius').min(0.5).max(5).step(0.01).onChange(() => portal.generateMagicParticle(scene))
-    // portalFolder.add(portal.parameters,'spin').min(-5).max(5).step(0.001).onChange(() => portal.generateMagicParticle(scene))
-    // portalFolder.addColor(portal.parameters,'insideColor').onChange(() => portal.generateMagicParticle(scene))
-    // portalFolder.addColor(portal.parameters,'outsideColor').onChange(() => portal.generateMagicParticle(scene))
-
-    // portalFolder.add(portal.parameters,'randomness').min(0).max(2).step(0.001).onChange(() => portal.generateMagicParticle(scene))
-
-    if(args.length > 0)
-    {
-        args.forEach(object => {
-            object.displayGUIProps(gui);
-
-        })
-      
-
-    }
-}
