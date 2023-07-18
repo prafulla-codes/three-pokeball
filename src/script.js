@@ -1,6 +1,10 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls';
 import * as dat from 'lil-gui'
+import {gsap} from 'gsap'
+import helvatica_Bold from 'three/examples/fonts/helvetiker_bold.typeface.json'
+import {FontLoader} from 'three/examples/jsm/loaders/FontLoader'
+import {TextGeometry} from 'three/examples/jsm/geometries/TextGeometry'
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader';
 const canvas = document.querySelector('canvas.webgl');
 const textureLoader = new THREE.TextureLoader()
@@ -28,9 +32,15 @@ var SCENE_CONFIG = {
     contactMaterials: {},
     mouse : new THREE.Vector2(),
     camera: null,
+    credits:
+    {
+        texts : [],
+        size : 0.08,
+        color : new THREE.Color("white")
+    },
     pokeball:{
         isButtonHovered: false,
-        hoverColor : new THREE.Color("#f54242"),
+        hoverColor : new THREE.Color("#aeffa8"),
         scene : null,
         gameboyPlane : null,
         isOpen : false
@@ -50,7 +60,7 @@ const gltfLoader = new GLTFLoader();
 const gui = new dat.GUI()
 gui.addColor(SCENE_CONFIG.pokeball,'hoverColor').onChange(color=>{
     SCENE_CONFIG.pokeball.hoverColor.set(color)
-})
+}) 
 
 
 const loadedOjects = Promise.all([
@@ -102,18 +112,47 @@ function loadScene(loadedObjects){
     gui.add(SCENE_CONFIG.scene,'backgroundBlurriness').min(0).max(10).step(0.001)
     gui.add(SCENE_CONFIG.scene,'backgroundIntensity').min(0).max(10).step(0.001)
 
-    // let pointLight = new THREE.PointLight('white',1);
-    // pointLight.position.y = 4;
-    // pointLight.position.z = -6;
-    // SCENE_CONFIG.scene.add(pointLight)
-    // let portal = new Portal(SCENE_CONFIG);
-    // portal.generateMagicParticle(SCENE_CONFIG.scene)
-    // SCENE_CONFIG.scene.add(portal.mesh)
+ 
+
+    
     tick()
 
 }
 
- 
+function InitializeCredits() {
+    const creditsTextureParams = {
+        font: new FontLoader().parse(helvatica_Bold), 
+        size: SCENE_CONFIG.credits.size,
+        height: 0.1, // Depth of the text extrusion
+        curveSegments: 12, // Number of points on the curves
+        bevelEnabled: false, // Whether to add bevel
+      }
+    const textMaterial = new THREE.MeshBasicMaterial({ color: SCENE_CONFIG.credits.color });
+
+    const creditsGeometry = new TextGeometry("Credits :)", creditsTextureParams);
+    const textCredits = new THREE.Mesh(creditsGeometry, textMaterial);
+
+    
+    const creditsText1Geometry = new TextGeometry("1 - @BlockadeLabs", creditsTextureParams);
+    const text1Credits = new THREE.Mesh(creditsText1Geometry, textMaterial);
+
+    SCENE_CONFIG.credits.texts.push(textCredits)
+    SCENE_CONFIG.credits.texts.push(text1Credits)
+
+    gsap.to(textCredits.position,{
+        y: 2,
+        x:0,
+        duration:2
+    })
+    
+    gsap.to(text1Credits.position,{
+        y:1.8,
+        x:0,
+        duration:2
+    })
+    SCENE_CONFIG.scene.add(textCredits)
+    SCENE_CONFIG.scene.add(text1Credits)
+}
 
 function initializeWorld(){
     // THREE WORLD
@@ -128,9 +167,9 @@ function initializeWorld(){
 
     // Camera 
     const camera = new THREE.PerspectiveCamera(75,SCENE_CONFIG.sizes.width/ SCENE_CONFIG.sizes.height)
-    camera.position.z=13;
+    camera.position.z=5;
     camera.position.y = 2;
-    camera.position.x = -5;
+    camera.position.x = -2;
     // camera.lookAt(portal)
     // Orbit Controls
     const controls = new OrbitControls(camera, SCENE_CONFIG.canvas)
@@ -146,6 +185,7 @@ function initializeWorld(){
     SCENE_CONFIG.camera = camera
     SCENE_CONFIG.controls = controls
     SCENE_CONFIG.renderer = renderer
+    InitializeCredits()
 }
 
 
@@ -166,7 +206,18 @@ window.addEventListener('dblclick', () =>
 
 window.addEventListener('mousedown',(e)=>{
     if(SCENE_CONFIG.pokeball.isButtonHovered && !SCENE_CONFIG.pokeball.isOpen){
+        SCENE_CONFIG.pokeball.isOpen = true
         SCENE_CONFIG.animationAction.play()
+        // gsap.to(SCENE_CONFIG.camera.position,{
+        //     z:0.5,
+        //     x:-0.5,
+        //     y:2.3,
+        //     duration: 2.5,
+        //     clear:false
+        // })
+
+ 
+
         SCENE_CONFIG.pokeball.gameboyPlane.visible = true
     }
 })
@@ -238,6 +289,8 @@ const tick = () => {
 
                 }
             }
+
+            for(const text of SCENE_CONFIG.credits.texts) text.lookAt(SCENE_CONFIG.camera.position)
         }
 
         window.requestAnimationFrame(tick);
