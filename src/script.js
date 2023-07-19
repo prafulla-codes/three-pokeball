@@ -119,40 +119,7 @@ function loadScene(loadedObjects){
 
 }
 
-function InitializeCredits() {
-    const creditsTextureParams = {
-        font: new FontLoader().parse(helvatica_Bold), 
-        size: SCENE_CONFIG.credits.size,
-        height: 0.1, // Depth of the text extrusion
-        curveSegments: 12, // Number of points on the curves
-        bevelEnabled: false, // Whether to add bevel
-      }
-    const textMaterial = new THREE.MeshBasicMaterial({ color: SCENE_CONFIG.credits.color });
 
-    const creditsGeometry = new TextGeometry("Credits :)", creditsTextureParams);
-    const textCredits = new THREE.Mesh(creditsGeometry, textMaterial);
-
-    
-    const creditsText1Geometry = new TextGeometry("1 - @BlockadeLabs", creditsTextureParams);
-    const text1Credits = new THREE.Mesh(creditsText1Geometry, textMaterial);
-
-    SCENE_CONFIG.credits.texts.push(textCredits)
-    SCENE_CONFIG.credits.texts.push(text1Credits)
-
-    gsap.to(textCredits.position,{
-        y: 2,
-        x:0,
-        duration:2
-    })
-    
-    gsap.to(text1Credits.position,{
-        y:1.8,
-        x:0,
-        duration:2
-    })
-    SCENE_CONFIG.scene.add(textCredits)
-    SCENE_CONFIG.scene.add(text1Credits)
-}
 
 function initializeWorld(){
     // THREE WORLD
@@ -185,7 +152,6 @@ function initializeWorld(){
     SCENE_CONFIG.camera = camera
     SCENE_CONFIG.controls = controls
     SCENE_CONFIG.renderer = renderer
-    InitializeCredits()
 }
 
 
@@ -208,13 +174,13 @@ window.addEventListener('mousedown',(e)=>{
     if(SCENE_CONFIG.pokeball.isButtonHovered && !SCENE_CONFIG.pokeball.isOpen){
         SCENE_CONFIG.pokeball.isOpen = true
         SCENE_CONFIG.animationAction.play()
-        // gsap.to(SCENE_CONFIG.camera.position,{
-        //     z:0.5,
-        //     x:-0.5,
-        //     y:2.3,
-        //     duration: 2.5,
-        //     clear:false
-        // })
+        gsap.to(SCENE_CONFIG.camera.position,{
+            z:0.5,
+            x:-0.5,
+            y:2.3,
+            duration: 2.5,
+            clear:false
+        })
 
  
 
