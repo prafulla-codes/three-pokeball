@@ -6,6 +6,8 @@ import helvatica_Bold from 'three/examples/fonts/helvetiker_bold.typeface.json'
 import {FontLoader} from 'three/examples/jsm/loaders/FontLoader'
 import {TextGeometry} from 'three/examples/jsm/geometries/TextGeometry'
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader';
+
+const pokechill = new Audio("/sounds/pokechill.mp3")
 const canvas = document.querySelector('canvas.webgl');
 const textureLoader = new THREE.TextureLoader()
 const rayCaster = new THREE.Raycaster();
@@ -43,7 +45,9 @@ var SCENE_CONFIG = {
         hoverColor : new THREE.Color("#aeffa8"),
         scene : null,
         gameboyPlane : null,
-        isOpen : false
+        isOpen : false,
+        isAudioPlaying : false,
+        playAudio : true
     },
     sizes : {
         width: window.innerWidth,
@@ -111,7 +115,12 @@ function loadScene(loadedObjects){
     })
     gui.add(SCENE_CONFIG.scene,'backgroundBlurriness').min(0).max(10).step(0.001)
     gui.add(SCENE_CONFIG.scene,'backgroundIntensity').min(0).max(10).step(0.001)
-
+    gui.add(SCENE_CONFIG.pokeball,'playAudio',(play)=>{
+        if(!play && SCENE_CONFIG.pokeball.isAudioPlaying) {
+            pokechill.currentTime = 0;
+            pokechill.pause()
+        }
+    })
  
 
     
@@ -176,12 +185,17 @@ window.addEventListener('mousedown',(e)=>{
         SCENE_CONFIG.animationAction.play()
         gsap.to(SCENE_CONFIG.camera.position,{
             z:0.5,
-            x:-0.5,
+            x:-0.2,
             y:2.3,
-            duration: 2.5,
+            duration: 6,
             clear:false
         })
-
+        if(SCENE_CONFIG.pokeball.playAudio) {
+            pokechill.play();
+            pokechill.loop = true;
+            SCENE_CONFIG.pokeball.isAudioPlaying = true;
+        }
+      
  
 
         SCENE_CONFIG.pokeball.gameboyPlane.visible = true

@@ -26,7 +26,7 @@
   "dependencies": {
     "cannon-es": "^0.20.0",
     "gsap": "^3.12.2",
-    "lil-gui": "^0.18.1",
+    "lil-gui": "^0.18.2",
     "three": "^0.149.0"
   },
   "devDependencies": {
