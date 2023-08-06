@@ -121,9 +121,18 @@ function loadScene(loadedObjects){
             pokechill.pause()
         }
     })
- 
+    const directionalLight = new THREE.DirectionalLight(new THREE.Color("white"),1)
+    directionalLight.castShadow = true
 
-    
+    SCENE_CONFIG.scene.add(directionalLight)
+
+    gui.add(directionalLight, 'intensity').min(0).max(10).step(0.001).name('lightIntensity')
+    gui.add(directionalLight.position, 'x').min(- 10).max(10).step(0.001).name('lightX')
+    gui.add(directionalLight.position, 'y').min(- 10).max(10).step(0.001).name('lightY')
+    gui.add(directionalLight.position, 'z').min(- 10).max(10).step(0.001).name('lightZ')
+
+    gui.add(directionalLight.shadow, 'normalBias').min(- 0.05).max(0.05).step(0.001)
+    gui.add(directionalLight.shadow, 'bias').min(- 0.05).max(0.05).step(0.001)
     tick()
 
 }
@@ -152,12 +161,25 @@ function initializeWorld(){
     controls.enableDamping = true;
     // Renderer
 
-    const renderer = new THREE.WebGLRenderer({canvas: SCENE_CONFIG.canvas});
-
+    const renderer = new THREE.WebGLRenderer({
+        canvas: SCENE_CONFIG.canvas,
+         antialias:true,
+        });
+    renderer.useLegacyLights = false;
+    renderer.toneMapping = THREE.ReinhardToneMapping
     renderer.setSize(SCENE_CONFIG.sizes.width,SCENE_CONFIG.sizes.height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio,2))
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap
+    gui.add(renderer, 'toneMapping', {
+        No: THREE.NoToneMapping,
+        Linear: THREE.LinearToneMapping,
+        Reinhard: THREE.ReinhardToneMapping,
+        Cineon: THREE.CineonToneMapping,
+        ACESFilmic: THREE.ACESFilmicToneMapping
+    })
+    gui.add(renderer, 'useLegacyLights')
+    gui.add(renderer, 'toneMappingExposure').min(0).max(10).step(0.001)
     SCENE_CONFIG.camera = camera
     SCENE_CONFIG.controls = controls
     SCENE_CONFIG.renderer = renderer
