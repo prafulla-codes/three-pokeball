@@ -1,7 +1,7 @@
 {
-  "name": "minecraft-portal",
+  "name": "three-pokeball",
   "version": "1.0.0",
-  "description": "Minecraft Portal",
+  "description": "Three Pokeball",
   "private": true,
   "main": "index.js",
   "type": "module",
