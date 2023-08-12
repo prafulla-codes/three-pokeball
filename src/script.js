@@ -166,11 +166,9 @@ function initializeWorld(){
          antialias:true,
         });
     renderer.useLegacyLights = false;
-    renderer.toneMapping = THREE.ReinhardToneMapping
     renderer.setSize(SCENE_CONFIG.sizes.width,SCENE_CONFIG.sizes.height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio,2))
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap
     gui.add(renderer, 'toneMapping', {
         No: THREE.NoToneMapping,
         Linear: THREE.LinearToneMapping,
